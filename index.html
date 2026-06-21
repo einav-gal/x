@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>חידון איקס עיגול</title> 
+
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Assistant' rel='stylesheet');
+
+        body {
+            font-family: 'Assistant', sans-serif;
+            font-weight: bold;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('img/bg.svg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            direction: rtl;
+        }
+
+        .landing-container {
+            text-align: center;
+            margin: 1em;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+			max-width: 500px;
+        }
+
+        #question-turn {
+			font-size: 3.2vh;
+			margin-bottom: 0.3em;
+			font-weight: 500;
+		}
+
+        .landing-container h1 {
+            color: #6d46e8;
+			font-size: 10vw;
+            margin-bottom: 20px;
+        }
+
+        .landing-container input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 6vw;
+            font-weight: bold;
+            color: #385E96;
+        }
+
+        .landing-container button {
+            width: 80%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #6C4CED;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 6vw;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+        }
+
+        .landing-container button:hover {
+            background-color: #5b3bcd;
+        }
+
+        .game-container {
+            display: none;
+            text-align: center;
+            max-width: 90%;
+            width: 100%;
+            position: relative;
+        }
+
+        .game-container h1 {
+            font-size: 3em;
+            color: #fff;
+			margin-bottom: 0.1em;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 100vmin;
+            max-height: 100vmin;
+        }
+
+        .cell {
+            background-color: #fdeff3;
+            border-radius: 10px;
+            font-size: 8vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            aspect-ratio: 1;
+            font-weight: bold;
+            color: #385E96;
+			box-shadow: 1px 4px 10px 4px #1c1c1c42 !important;
+        }
+
+        .cell:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .game-info {
+            margin-bottom: 20px;
+        }
+
+        .game-info #message {
+            font-weight: bold;
+            font-size: 7vw;
+            aria-live: polite;
+        }
+
+        #reset-button {
+            display: none;
+            padding: 20px 40px;
+            background-color: #6C4CED;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 5vw;
+        }
+
+        #reset-button:hover {
+            background-color: #5b3bcd;
+        }
+
+        #popup-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background-color: #fff;
+            padding: 40px 40px 60px 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 2000;
+            width: calc(100% - 20px);
+            max-width: 500px;
+            transition: transform 0.5s ease;
+        }
+
+        #popup-message.show {
+            display: block;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #popup-message h2 {
+            margin: 0;
+			font-size: 38px;
+			color: #6c4ced;
+        }
+
+        #popup-message p {
+            font-size: 30px;
+			margin-top: 10px;
+        }
+
+        .cell img {
+            width: 80%;
+            height: 80%;
+        }
+		
+		/* Question popup styles */
+        #question-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;	
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        #question-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #question-container {
+            background-color: white;
+            padding: 36px;
+            margin: 1em;
+            border-radius: 20px;
+            text-align: center;
+            width: calc(100% - 20px);
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+            transition: transform 0.5s ease;
+        }
+
+        #question-overlay.active #question-container {
+            transform: translateY(0);
+        }
+
+        .answer-button {
+            padding: 20px 30px;
+            background-color: #f0f0f0;
+            color: #000;
+            border: 2px solid #5431DB;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            font-size: 2vw;
+            font-weight: bold;
+            text-align: center;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .answer-button:hover {
+            background-color: #e0e0e0;
+            border-color: #6d46e8;
+        }
+
+        .answer-button.correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .answer-button.incorrect {
+            background-color: #F44336;
+            color: white;
+        }
+
+        #answer-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media only screen and (min-width: 768px) {
+            body {
+                max-width: 1280px;
+                margin: 0 auto;
+            }
+
+            .board {
+                max-width: 50vmin;
+                max-height: 50vmin;
+            }
+
+            .cell {
+                font-size: 4vmin;
+            }
+
+            .landing-container h1 {
+			  font-size: 3em;
+			}
+			
+            .landing-container input,
+            .landing-container button,
+            .game-info #message,
+            #reset-button,
+            #question {
+                font-size: 2em;
+            }
+
+            #question-container {
+                padding: 30px 60px;
+                width: calc(100% - 20px);
+                max-width: 600px;
+            }
+
+            #question {
+                font-size: 4vmin;
+            }
+
+            .answer-button {
+                font-size: 3vmin;
+            }
+        }
+    </style>
+</head>
+<body>
+	<div>
+		<div class="landing-container">
+			<h1>ברוכים הבאים <br/>לחידון איקס עיגול</h1>
+			<input type="text" id="player-x-name" placeholder="שם קבוצה 1" aria-label="הזן שם קבוצה 1">
+			<input type="text" id="player-o-name" placeholder="שם קבוצה 2" aria-label="הזן שם קבוצה 2">
+			<button id="start-game-button" aria-label="התחל משחק">התחל משחק</button>
+		</div>
+   </div>
+
+    <div class="game-container">
+        <h1>חידון איקס עיגול</h1>
+        <div class="game-info">
+            <div id="message" aria-live="polite"></div>
+        </div>
+        <div class="board" id="board" role="grid" aria-label="לוח משחק איקס עיגול">
+            <div class="cell" role="gridcell" tabindex="0" data-index="0"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="1"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="2"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="3"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="4"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="5"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="6"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="7"></div>
+            <div class="cell" role="gridcell" tabindex="0" data-index="8"></div>
+        </div>
+    </div>
+
+    <div id="popup-message" aria-live="assertive" role="dialog" aria-modal="true">
+        <h2 id="popup-title"></h2>
+        <p id="popup-content"></p>
+        <img src="img/aaadcop.gif" width="220" alt="אייקון משחק סיום">
+        <p id="popup-turn"></p>
+        <button id="reset-button" aria-label="התחל משחק מחדש">התחל מחדש</button>
+    </div>
+
+    <div id="question-overlay" aria-hidden="true">
+    <div id="question-container">
+        <p id="question-turn"></p>
+        <h2 id="question"></h2>
+        <div id="answer-buttons">
+            <button class="answer-button" id="answer1" tabindex="-1"></button>
+            <button class="answer-button" id="answer2" tabindex="-1"></button>
+            <button class="answer-button" id="answer3" tabindex="-1"></button>
+            <button class="answer-button" id="answer4" tabindex="-1"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+const startGameButton = document.getElementById('start-game-button');
+const playerXNameInput = document.getElementById('player-x-name');
+const playerONameInput = document.getElementById('player-o-name');
+const landingContainer = document.querySelector('.landing-container');
+const gameContainer = document.querySelector('.game-container');
+const board = document.getElementById('board');
+const cells = document.querySelectorAll('.cell');
+const messageElement = document.getElementById('message');
+const resetButton = document.getElementById('reset-button');
+const popupMessage = document.getElementById('popup-message');
+const popupTitle = document.getElementById('popup-title');
+const popupContent = document.getElementById('popup-content');
+const questionOverlay = document.getElementById('question-overlay');
+const questionElement = document.getElementById('question');
+const questionTurnElement = document.getElementById('question-turn');
+const answerButtons = document.querySelectorAll('.answer-button');
+
+let currentPlayer = 'X';
+let gameBoard = ['', '', '', '', '', '', '', '', ''];
+let gameActive = true;
+let selectedCell = null;
+let currentQuestions = [];
+let playerXName = 'קבוצה 1';
+let playerOName = 'קבוצה 2';
+
+let cellQuestions = new Array(9).fill(null);
+let cellMistakes = new Array(9).fill(0);
+
+startGameButton.addEventListener('click', () => {
+    playerXName = playerXNameInput.value || 'קבוצה 1';
+    playerOName = playerONameInput.value || 'קבוצה 2';
+    landingContainer.style.display = 'none';
+    gameContainer.style.display = 'block';
+    messageElement.innerHTML = `תור ${playerXName}`;
+    currentQuestions = selectRandomQuestions();
+});
+
+ const allQuestions = [
+    { question: "מה היא בירת צרפת?", answers: ["לונדון", "ברלין", "פריז", "מדריד"], correct: 2 },
+    { question: "מהו הנהר הארוך ביותר בעולם?", answers: ["הנילוס", "האמזונס", "הדנובה", "הגנגס"], correct: 0 },
+    { question: "באיזו מדינה נמצאת הפירמידה הגדולה של גיזה?", answers: ["מצרים", "סודן", "ערב הסעודית", "לוב"], correct: 0 },
+    { question: "כמה יבשות יש בעולם?", answers: ["5", "6", "7", "8"], correct: 2 },
+    { question: "איזו מדינה ידועה כ'ארץ השמש העולה'?", answers: ["סין", "יפן", "קוריאה", "תאילנד"], correct: 1 },
+    { question: "מהי העיר הגדולה ביותר בארה\"ב?", answers: ["לוס אנג'לס", "ניו יורק", "שיקגו", "וושינגטון"], correct: 1 },
+    { question: "מהו הכוכב הקרוב ביותר לכדור הארץ?", answers: ["מאדים", "שבתאי", "נוגה", "שמש"], correct: 3 },
+    { question: "באיזו שנה נחתה אפולו 11 על הירח?", answers: ["1969", "1972", "1966", "1959"], correct: 0 },
+    { question: "מהו היסוד הכימי הכי קל?", answers: ["מימן", "חמצן", "הליום", "פחמן"], correct: 0 },
+    { question: "מי היה ראש הממשלה הראשון של ישראל?", answers: ["גולדה מאיר", "בנימין נתניהו", "דוד בן-גוריון", "יצחק רבין"], correct: 2 },
+    { question: "מהי יחידת המטבע של יפן?", answers: ["דולר", "יורו", "ין", "יואן"], correct: 2 },
+    { question: "כמה שיניים יש לאדם בוגר?", answers: ["24", "30", "32", "28"], correct: 2 },
+    { question: "מהו הכוכב החמישי במערכת השמש?", answers: ["מאדים", "יופיטר", "שבתאי", "נוגה"], correct: 1 },
+    { question: "באיזו שנה הוקמה מדינת ישראל?", answers: ["1947", "1948", "1950", "1967"], correct: 1 },
+    { question: "מהי שפת האם של מדינת ברזיל?", answers: ["ספרדית", "פורטוגזית", "אנגלית", "צרפתית"], correct: 1 },
+    { question: "מהי העיר הגדולה ביותר באוסטרליה?", answers: ["מלבורן", "סידני", "פרת'", "אדלייד"], correct: 1 },
+    { question: "מי המציא את הנורה החשמלית?", answers: ["ניקולה טסלה", "אלברט איינשטיין", "תומאס אדיסון", "אלכסנדר גרהם בל"], correct: 2 },
+    { question: "מהו הגבוה ביותר: הר האוורסט, הקילימנג'רו, הר מקינלי, הר הפוג'י?", answers: ["הר האוורסט", "הקילימנג'רו", "הר מקינלי", "הר הפוג'י"], correct: 0 },
+    { question: "איזה יונק הוא הגדול ביותר בעולם?", answers: ["פיל אפריקאי", "לווייתן כחול", "קרנף", "ג'ירפה"], correct: 1 },
+    { question: "מי כתב את 'המלך ליר'?", answers: ["ויליאם שייקספיר", "צ'ארלס דיקנס", "אוסקר ויילד", "ג'ורג' אורוול"], correct: 0 }
+];
+const xSymbol = `<img src="img/x.png" alt="X">`;
+const oSymbol = `<img src="img/o.png" alt="O">`;
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function selectRandomQuestions() {
+    const shuffled = shuffleArray([...allQuestions]);
+    return shuffled.slice(0, 40);
+}
+
+function checkWinner() {
+    const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ];
+
+    for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+            return gameBoard[a];
+        }
+    }
+
+    return gameBoard.includes('') ? null : 'תיקו';
+}
+
+function handleCellClick(index) {
+    if (!gameActive || gameBoard[index] !== '') return;
+
+    selectedCell = index;
+    cells[index].classList.add('selected');
+    cells[index].classList.add(currentPlayer === 'X' ? 'group-x' : 'group-o');
+    
+    setTimeout(() => {
+        showQuestion();
+    }, 300);
+}
+
+function showQuestion() {
+    if (!cellQuestions[selectedCell]) {
+        if (currentQuestions.length === 0) {
+            currentQuestions = selectRandomQuestions();
+        }
+        cellQuestions[selectedCell] = currentQuestions.pop();
+        cellMistakes[selectedCell] = 0;
+    }
+
+    const currentQuestionData = cellQuestions[selectedCell];
+
+    // במקרה שזו שאלה חדשה, נציג תור רגיל
+    if (cellMistakes[selectedCell] === 0) {
+        questionTurnElement.textContent = `תור ${currentPlayer === 'X' ? playerXName : playerOName}`;
+    }
+
+    answerButtons.forEach(button => {
+        button.classList.remove('correct', 'incorrect');
+        button.disabled = false;
+        button.setAttribute('tabindex', '0');
+    });
+
+    questionElement.textContent = currentQuestionData.question;
+
+    currentQuestionData.answers.forEach((answer, i) => {
+        answerButtons[i].textContent = answer;
+        answerButtons[i].onclick = () => handleAnswer(i === currentQuestionData.correct, i, currentQuestionData.correct);
+    });
+
+    questionOverlay.classList.add('active');
+    questionOverlay.setAttribute('aria-hidden', 'false');
+}
+
+function closeQuestionPopup() {
+    questionOverlay.classList.remove('active');
+    questionOverlay.setAttribute('aria-hidden', 'true');
+
+    answerButtons.forEach(button => {
+        button.setAttribute('tabindex', '-1');
+    });
+}
+
+function handleAnswer(correct, selectedIndex, correctIndex) {
+    answerButtons.forEach(button => button.disabled = true);
+
+    // נבדוק האם הניסיון הנוכחי הוא תור בונוס של הקבוצה השנייה
+    const isBonusTurn = (cellMistakes[selectedCell] === 1);
+
+    if (correct) {
+        // התשובה נכונה
+        answerButtons[selectedIndex].classList.add('correct');
+        
+        setTimeout(() => {
+            closeQuestionPopup();
+            cells[selectedCell].classList.remove('selected');
+
+            cellQuestions[selectedCell] = null;
+            cellMistakes[selectedCell] = 0;
+
+            gameBoard[selectedCell] = currentPlayer;
+            const cellContent = document.createElement('div');
+            cellContent.innerHTML = currentPlayer === 'X' ? xSymbol : oSymbol;
+            cells[selectedCell].innerHTML = '';
+            cells[selectedCell].appendChild(cellContent);
+            
+            const winner = checkWinner();
+            if (winner) {
+                gameActive = false;
+                showPopup(winner === 'תיקו' ? "המשחק הסתיים בתיקו!" : `${winner === 'X' ? playerXName : playerOName} ניצחו!`);
+                resetButton.style.display = 'inline-block';
+            } else {
+                // אם זה לא היה בונוס (תור ראשון רגיל) - מעבירים את התור כרגיל.
+                // אם זה כן היה בונוס - אנחנו *לא* מעבירים את התור, והתור הרגיל נשאר אצל מי שזה עתה ענה.
+                if (!isBonusTurn) {
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                }
+                messageElement.innerHTML = `תור ${currentPlayer === 'X' ? playerXName : playerOName}`;
+            }
+
+            cells[selectedCell].classList.remove('group-x', 'group-o');
+            selectedCell = null;
+        }, 1500);
+
+    } else {
+        // התשובה שגויה - מסמנים באדום בלבד ללא חיווי ירוק
+        answerButtons[selectedIndex].classList.add('incorrect');
+        cellMistakes[selectedCell]++;
+
+        if (cellMistakes[selectedCell] === 1) {
+            // טעות ראשונה - הפופאפ נשאר פתוח, התור עובר (לתור הבונוס)
+            setTimeout(() => {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                const nextPlayerName = currentPlayer === 'X' ? playerXName : playerOName;
+                
+                let groupNameText = nextPlayerName.includes("קבוצה") ? nextPlayerName : `קבוצה ${nextPlayerName}`;
+                questionTurnElement.textContent = `התור עובר ל${groupNameText}`;
+                messageElement.innerHTML = `תור ${nextPlayerName}`;
+                
+                cells[selectedCell].classList.remove('group-x', 'group-o');
+                cells[selectedCell].classList.add(currentPlayer === 'X' ? 'group-x' : 'group-o');
+
+                answerButtons.forEach(button => {
+                    if (!button.classList.contains('incorrect')) {
+                        button.disabled = false;
+                    }
+                });
+            }, 1000); 
+        } else {
+            // טעות שנייה - הקבוצה שקיבלה בונוס טעתה גם היא
+            setTimeout(() => {
+                closeQuestionPopup();
+                cells[selectedCell].classList.remove('selected', 'group-x', 'group-o');
+                
+                cellQuestions[selectedCell] = null;
+                cellMistakes[selectedCell] = 0;
+
+                // לא מעבירים פה את התור! הקבוצה ששיחקה עכשיו בבונוס ממשיכה מיד לתור הרגיל שלה.
+                messageElement.innerHTML = `תור ${currentPlayer === 'X' ? playerXName : playerOName}`;
+                
+                selectedCell = null;
+            }, 1500);
+        }
+    }
+}
+
+function showPopup(message) {
+    popupTitle.textContent = "המשחק הסתיים";
+    popupContent.textContent = message;
+    popupMessage.classList.add('show');
+}
+
+function resetGame() {
+    gameBoard = ['', '', '', '', '', '', '', '', ''];
+    gameActive = true;
+    currentPlayer = 'X';
+    cellQuestions.fill(null);
+    cellMistakes.fill(0);
+    
+    cells.forEach(cell => {
+        cell.innerHTML = '';
+        cell.classList.remove('group-x', 'group-o');
+    });
+    messageElement.innerHTML = `תור ${playerXName}`;
+    popupMessage.classList.remove('show');
+    popupTitle.textContent = '';
+    popupContent.textContent = '';
+    resetButton.style.display = 'none';
+    currentQuestions = selectRandomQuestions();
+}
+
+cells.forEach((cell, index) => {
+    cell.addEventListener('click', () => handleCellClick(index));
+    cell.addEventListener('touchstart', () => handleCellClick(index));
+    cell.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            handleCellClick(index);
+        }
+    });
+    cell.addEventListener('mouseover', () => {
+        if (gameBoard[index] === '') {
+            cell.classList.add(currentPlayer === 'X' ? 'group-x' : 'group-o');
+        }
+    });
+    cell.addEventListener('mouseout', () => {
+        if (gameBoard[index] === '') {
+            cell.classList.remove('group-x', 'group-o');
+        }
+    });
+});
+
+resetButton.addEventListener('click', resetGame);
+
+</script>
+</body>
+</html>
